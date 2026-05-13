@@ -1,0 +1,61 @@
+version: "3"
+
+vars:
+  VENV_DIR: venv
+  PYTHON: python3
+  PIP: "{{.VENV_DIR}}/bin/pip"
+  MKDOCS: "{{.VENV_DIR}}/bin/mkdocs"
+
+tasks:
+  default:
+    desc: List available tasks
+    cmd: task --list
+
+  # ── Go ────────────────────────────────────────────────────────────────────
+
+  build:
+    desc: Build the whoiam binary
+    cmd: go build -o bin/whoiam .
+
+  test:
+    desc: Run all tests
+    cmd: go test ./...
+
+  lint:
+    desc: Run go vet
+    cmd: go vet ./...
+
+  tidy:
+    desc: Tidy go modules
+    cmd: go mod tidy
+
+  release:
+    desc: Build a release with goreleaser (snapshot)
+    cmd: goreleaser release --snapshot --clean
+
+  # ── Docs ──────────────────────────────────────────────────────────────────
+
+  docs:venv:
+    desc: Create Python venv for docs
+    cmd: "{{.PYTHON}} -m venv {{.VENV_DIR}}"
+    status:
+      - test -d {{.VENV_DIR}}
+
+  docs:install:
+    desc: Install mkdocs and theme into venv
+    deps: [docs:venv]
+    cmd: "{{.PIP}} install mkdocs mkdocs-material"
+
+  docs:build:
+    desc: Build the docs site
+    deps: [docs:install]
+    cmd: "{{.MKDOCS}} build"
+
+  docs:serve:
+    desc: Serve the docs site locally
+    deps: [docs:install]
+    cmd: "{{.MKDOCS}} serve"
+
+  docs:clean:
+    desc: Remove venv and built site
+    cmd: rm -rf {{.VENV_DIR}} site

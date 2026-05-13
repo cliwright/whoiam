@@ -22,40 +22,43 @@ func execEntrypoint(cmd *cobra.Command, args []string) {
 		fmt.Println("No command provided starting subshell. Type 'exit' to return to the parent shell")
 	}
 
-	cfgPath, err := internal.NewConfigPath()
-	internal.HandelError(err)
-
-	cfg, err := cfgPath.LoadConfig()
-	internal.HandelError(err)
+	cfg, err := internal.LoadEffectiveConfig()
+	internal.HandleError(err)
 
 	if !cfg.AccountExists(accountName) {
-		fmt.Println("Account does not exist")
+		fmt.Printf("Account %q does not exist in config\n", accountName)
 		os.Exit(1)
 	}
 
 	client, err := internal.NewStsClient()
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	identity, err := client.GetCallerIdentity()
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	err = internal.AssertAccountAsExpected(identity, cfg.Accounts[accountName])
-	internal.HandelError(err)
-	fmt.Printf("Assert AWS account %s is %s\n", accountName, cfg.Accounts[accountName])
+	internal.HandleError(err)
+	fmt.Printf("Verified: AWS account %s (%s)\n", accountName, cfg.Accounts[accountName])
 
 	shell, err := internal.NewSubShell(args...)
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	err = shell.Run()
-	internal.HandelError(err)
+	internal.HandleError(err)
 }
 
 // execCmd represents the exec command
 var execCmd = &cobra.Command{
 	Use:   "exec",
-	Short: "A brief description of your command",
-	Long:  ``,
-	Run:   execEntrypoint,
+	Short: "Verify the current AWS account and run a command (or open a subshell)",
+	Long: `Verifies that the current AWS credentials match the expected account before
+running the given command. If no command is provided, opens an interactive
+subshell with the account assertion already satisfied.
+
+Example:
+  whoiam exec --account production terraform apply
+  whoiam exec --account staging`,
+	Run: execEntrypoint,
 }
 
 func init() {

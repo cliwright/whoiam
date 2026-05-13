@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strconv"
 )
 
@@ -25,6 +26,74 @@ func NewConfigPath() (*ConfigPath, error) {
 	}
 	path := usr.HomeDir + "/.whoiam"
 	return &ConfigPath{Path: path, File: "whoiam.yaml"}, nil
+}
+
+// NewProjectConfigPath returns a ConfigPath rooted at .whoiam/ in the current directory.
+// Used by whoiam init to create a project-local config.
+func NewProjectConfigPath() (*ConfigPath, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	return &ConfigPath{Path: filepath.Join(dir, ".whoiam"), File: "whoiam.yaml"}, nil
+}
+
+// FindLocalConfigPath walks up the directory tree from CWD looking for a .whoiam/whoiam.yaml.
+// Returns nil (no error) if no local config is found.
+func FindLocalConfigPath() (*ConfigPath, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		candidate := filepath.Join(dir, ".whoiam", "whoiam.yaml")
+		if _, err := os.Stat(candidate); err == nil {
+			return &ConfigPath{Path: filepath.Join(dir, ".whoiam"), File: "whoiam.yaml"}, nil
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return nil, nil
+		}
+		dir = parent
+	}
+}
+
+// LoadEffectiveConfig loads the global config and merges any project-local config on top.
+// Local account definitions take precedence over global ones on conflict.
+func LoadEffectiveConfig() (*Config, error) {
+	globalPath, err := NewConfigPath()
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := &Config{Accounts: make(map[string]string)}
+	if globalPath.ConfigFileExists() {
+		cfg, err = globalPath.LoadConfig()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	localPath, err := FindLocalConfigPath()
+	if err != nil {
+		return nil, err
+	}
+
+	if localPath == nil {
+		return cfg, nil
+	}
+
+	localCfg, err := localPath.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	for name, number := range localCfg.Accounts {
+		cfg.Accounts[name] = number
+	}
+
+	return cfg, nil
 }
 
 func NewTemplateConfig() (*Config, error) {
@@ -53,6 +122,11 @@ func (c *ConfigPath) Exists() bool {
 		return false
 	}
 	return true
+}
+
+func (c *ConfigPath) ConfigFileExists() bool {
+	_, err := os.Stat(c.FullPath())
+	return err == nil
 }
 
 func (c *ConfigPath) FullPath() string {
@@ -130,7 +204,7 @@ func (c *Config) PrintConfigTable() {
 	table.Render()
 }
 
-func HandelError(err error) {
+func HandleError(err error) {
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

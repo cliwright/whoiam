@@ -27,10 +27,10 @@ func addEntrypoint(cmd *cobra.Command, args []string) {
 	}
 
 	cfgPath, err := internal.NewConfigPath()
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	cfg, err := cfgPath.LoadConfig()
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	if cfg.AccountExists(accountName) {
 		fmt.Printf("Account %s already exists in the config\n", accountName)
@@ -44,10 +44,10 @@ func addEntrypoint(cmd *cobra.Command, args []string) {
 	}
 
 	err = cfg.AddAccount(accountName, accountNumber)
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	err = cfgPath.SaveConfig(cfg)
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	fmt.Printf("Added -- Account Number: %s Account Name: %s\n", accountNumber, accountName)
 
@@ -61,11 +61,8 @@ var addCmd = &cobra.Command{
 }
 
 func viewEntrypoint(cmd *cobra.Command, args []string) {
-	cfgPath, err := internal.NewConfigPath()
-	internal.HandelError(err)
-
-	cfg, err := cfgPath.LoadConfig()
-	internal.HandelError(err)
+	cfg, err := internal.LoadEffectiveConfig()
+	internal.HandleError(err)
 
 	cfg.PrintConfigTable()
 
@@ -74,7 +71,7 @@ func viewEntrypoint(cmd *cobra.Command, args []string) {
 
 var viewCmd = &cobra.Command{
 	Use:   "view",
-	Short: "View the whoiam config file",
+	Short: "View the effective whoiam config (global + project-local merged)",
 	Run:   viewEntrypoint,
 }
 
@@ -87,10 +84,10 @@ func deleteEntrypoint(cmd *cobra.Command, args []string) {
 	}
 
 	cfgPath, err := internal.NewConfigPath()
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	cfg, err := cfgPath.LoadConfig()
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	if !cfg.AccountExists(accountName) {
 		fmt.Printf("Account %s does not exist in config\n", accountName)
@@ -101,7 +98,7 @@ func deleteEntrypoint(cmd *cobra.Command, args []string) {
 	cfg.DeleteAccount(accountName)
 
 	err = cfgPath.SaveConfig(cfg)
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	fmt.Printf("Deleted -- Account Name: %s Number: %s\n", accountName, accountNumber)
 
@@ -116,7 +113,7 @@ var deleteCmd = &cobra.Command{
 
 func initEntrypoint(cmd *cobra.Command, args []string) {
 	cfgPath, err := internal.NewConfigPath()
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	if cfgPath.Exists() {
 		fmt.Println("Config file already exists")
@@ -124,13 +121,13 @@ func initEntrypoint(cmd *cobra.Command, args []string) {
 	}
 
 	err = cfgPath.Create()
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	cfg, err := internal.NewTemplateConfig()
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	err = cfgPath.SaveConfig(cfg)
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	os.Exit(0)
 }

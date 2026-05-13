@@ -12,16 +12,13 @@ import (
 
 func rootEntrypoint(cmd *cobra.Command, args []string) {
 	client, err := internal.NewStsClient()
-	internal.HandelError(err)
+	internal.HandleError(err)
 
 	identity, err := client.GetCallerIdentity()
-	internal.HandelError(err)
+	internal.HandleError(err)
 
-	cfgPath, err := internal.NewConfigPath()
-	internal.HandelError(err)
-
-	cfg, err := cfgPath.LoadConfig()
-	internal.HandelError(err)
+	cfg, err := internal.LoadEffectiveConfig()
+	internal.HandleError(err)
 
 	accountName := cfg.GetAccountByNumber(*identity.Account)
 
