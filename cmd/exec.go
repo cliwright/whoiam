@@ -11,10 +11,16 @@ import (
 )
 
 func execEntrypoint(cmd *cobra.Command, args []string) {
-	accountName, _ := cmd.Flags().GetString("account")
+	accountName, _ := cmd.Flags().GetString("env")
 
 	if accountName == "" {
-		fmt.Println("Account Name is required")
+		envAccount, err := internal.ReadCurrentEnv()
+		internal.HandleError(err)
+		accountName = envAccount
+	}
+
+	if accountName == "" {
+		fmt.Println("No account specified — use --account or run 'whoiam set <account>'")
 		os.Exit(1)
 	}
 
@@ -51,17 +57,17 @@ func execEntrypoint(cmd *cobra.Command, args []string) {
 var execCmd = &cobra.Command{
 	Use:   "exec",
 	Short: "Verify the current AWS account and run a command (or open a subshell)",
-	Long: `Verifies that the current AWS credentials match the expected account before
+	Long: `Verifies that the current AWS credentials match the expected environment before
 running the given command. If no command is provided, opens an interactive
 subshell with the account assertion already satisfied.
 
 Example:
-  whoiam exec --account production terraform apply
-  whoiam exec --account staging`,
+  whoiam exec --env production terraform apply
+  whoiam exec --env staging`,
 	Run: execEntrypoint,
 }
 
 func init() {
 	rootCmd.AddCommand(execCmd)
-	execCmd.Flags().StringP("account", "a", "", "Account Name")
+	execCmd.Flags().StringP("env", "e", "", "Environment name")
 }

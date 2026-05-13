@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 type ConfigPath struct {
@@ -94,6 +95,75 @@ func LoadEffectiveConfig() (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// FindLocalDir walks up from CWD looking for a .whoiam/ directory.
+// Returns "" (no error) if none is found.
+func FindLocalDir() (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	for {
+		candidate := filepath.Join(dir, ".whoiam")
+		if info, err := os.Stat(candidate); err == nil && info.IsDir() {
+			return candidate, nil
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", nil
+		}
+		dir = parent
+	}
+}
+
+// ReadCurrentEnv reads the account name from .whoiam/current-env.
+// Returns "" (no error) if no current-env file exists.
+func ReadCurrentEnv() (string, error) {
+	localDir, err := FindLocalDir()
+	if err != nil {
+		return "", err
+	}
+	if localDir == "" {
+		return "", nil
+	}
+	data, err := os.ReadFile(filepath.Join(localDir, "current-env"))
+	if os.IsNotExist(err) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(data)), nil
+}
+
+// WriteCurrentEnv writes the account name to .whoiam/current-env.
+// Requires a .whoiam/ directory to already exist (created by whoiam init).
+func WriteCurrentEnv(name string) error {
+	localDir, err := FindLocalDir()
+	if err != nil {
+		return err
+	}
+	if localDir == "" {
+		return fmt.Errorf("no .whoiam/ directory found — run 'whoiam init' first")
+	}
+	return os.WriteFile(filepath.Join(localDir, "current-env"), []byte(name+"\n"), 0644)
+}
+
+// ClearCurrentEnv removes .whoiam/current-env if it exists.
+func ClearCurrentEnv() error {
+	localDir, err := FindLocalDir()
+	if err != nil {
+		return err
+	}
+	if localDir == "" {
+		return nil
+	}
+	err = os.Remove(filepath.Join(localDir, "current-env"))
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
 }
 
 func NewTemplateConfig() (*Config, error) {

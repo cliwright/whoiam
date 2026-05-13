@@ -19,10 +19,10 @@ var configCmd = &cobra.Command{
 
 func addEntrypoint(cmd *cobra.Command, args []string) {
 	accountName, _ := cmd.Flags().GetString("name")
-	accountNumber, _ := cmd.Flags().GetString("account")
+	accountNumber, _ := cmd.Flags().GetString("number")
 
 	if accountName == "" || accountNumber == "" {
-		fmt.Println("--name and --account are required")
+		fmt.Println("--name and --number are required")
 		os.Exit(1)
 	}
 
@@ -144,8 +144,8 @@ func init() {
 	configCmd.AddCommand(viewCmd)
 
 	configCmd.AddCommand(addCmd)
-	addCmd.Flags().StringP("name", "n", "", "AWS Account Name")
-	addCmd.Flags().StringP("account", "a", "", "AWS Account Number")
+	addCmd.Flags().StringP("name", "n", "", "Environment name")
+	addCmd.Flags().StringP("number", "N", "", "AWS account number")
 
 	configCmd.AddCommand(deleteCmd)
 	deleteCmd.Flags().StringP("name", "n", "", "AWS Account Name")
