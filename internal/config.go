@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+const ExpectedEnvVar = "WHOIAM_EXPECTED_ENV"
+
 type ConfigPath struct {
 	Path string
 	File string
@@ -123,12 +125,22 @@ func LoadEffectiveConfigWithSources() (*Config, map[string]string, error) {
 
 // FindLocalDir walks up from CWD looking for a .whoiam/ directory.
 // Returns "" (no error) if none is found.
+// Stops before reaching the home directory to avoid treating ~/.whoiam/ as local.
 func FindLocalDir() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	homeDir := usr.HomeDir
+
 	for {
+		if dir == homeDir {
+			return "", nil
+		}
 		candidate := filepath.Join(dir, ".whoiam")
 		if info, err := os.Stat(candidate); err == nil && info.IsDir() {
 			return candidate, nil
@@ -142,23 +154,51 @@ func FindLocalDir() (string, error) {
 }
 
 // ReadCurrentEnv reads the account name from .whoiam/current-env.
-// Returns "" (no error) if no current-env file exists.
+// Checks local first, then falls back to global. Returns "" if neither is set.
 func ReadCurrentEnv() (string, error) {
+	name, _, err := ReadCurrentEnvWithSource()
+	return name, err
+}
+
+// ReadCurrentEnvWithSource is like ReadCurrentEnv but also returns the source:
+// "env" (WHOIAM_EXPECTED_ENV), "local" (.whoiam/expected-env), "global" (~/.whoiam/expected-env), or "" if not set.
+func ReadCurrentEnvWithSource() (string, string, error) {
+	if val := os.Getenv(ExpectedEnvVar); val != "" {
+		return val, "env", nil
+	}
+
 	localDir, err := FindLocalDir()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	if localDir == "" {
-		return "", nil
+	if localDir != "" {
+		data, err := os.ReadFile(filepath.Join(localDir, "expected-env"))
+		if err == nil {
+			name := strings.TrimSpace(string(data))
+			if name != "" {
+				return name, "local", nil
+			}
+		} else if !os.IsNotExist(err) {
+			return "", "", err
+		}
 	}
-	data, err := os.ReadFile(filepath.Join(localDir, "current-env"))
+
+	globalPath, err := NewConfigPath()
+	if err != nil {
+		return "", "", err
+	}
+	data, err := os.ReadFile(filepath.Join(globalPath.Path, "expected-env"))
 	if os.IsNotExist(err) {
-		return "", nil
+		return "", "", nil
 	}
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return strings.TrimSpace(string(data)), nil
+	name := strings.TrimSpace(string(data))
+	if name == "" {
+		return "", "", nil
+	}
+	return name, "global", nil
 }
 
 // WriteCurrentEnv writes the account name to .whoiam/current-env.
@@ -169,9 +209,9 @@ func WriteCurrentEnv(name string) error {
 		return err
 	}
 	if localDir == "" {
-		return fmt.Errorf("no .whoiam/ directory found — run 'whoiam init' first")
+		return fmt.Errorf("no .whoiam/ directory found — run 'whoiam init' first, or use --global to set globally")
 	}
-	return os.WriteFile(filepath.Join(localDir, "current-env"), []byte(name+"\n"), 0644)
+	return os.WriteFile(filepath.Join(localDir, "expected-env"), []byte(name+"\n"), 0644)
 }
 
 // ClearCurrentEnv removes .whoiam/current-env if it exists.
@@ -183,7 +223,48 @@ func ClearCurrentEnv() error {
 	if localDir == "" {
 		return nil
 	}
-	err = os.Remove(filepath.Join(localDir, "current-env"))
+	err = os.Remove(filepath.Join(localDir, "expected-env"))
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
+// ReadGlobalCurrentEnv reads the account name from ~/.whoiam/current-env.
+func ReadGlobalCurrentEnv() (string, error) {
+	globalPath, err := NewConfigPath()
+	if err != nil {
+		return "", err
+	}
+	data, err := os.ReadFile(filepath.Join(globalPath.Path, "expected-env"))
+	if os.IsNotExist(err) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(data)), nil
+}
+
+// WriteGlobalCurrentEnv writes the account name to ~/.whoiam/current-env.
+func WriteGlobalCurrentEnv(name string) error {
+	globalPath, err := NewConfigPath()
+	if err != nil {
+		return err
+	}
+	if !globalPath.Exists() {
+		return fmt.Errorf("no ~/.whoiam/ directory found — run 'whoiam init --global' first")
+	}
+	return os.WriteFile(filepath.Join(globalPath.Path, "expected-env"), []byte(name+"\n"), 0644)
+}
+
+// ClearGlobalCurrentEnv removes ~/.whoiam/current-env if it exists.
+func ClearGlobalCurrentEnv() error {
+	globalPath, err := NewConfigPath()
+	if err != nil {
+		return err
+	}
+	err = os.Remove(filepath.Join(globalPath.Path, "expected-env"))
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}

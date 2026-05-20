@@ -10,13 +10,13 @@ import (
 )
 
 func statusEntrypoint(cmd *cobra.Command, args []string) {
-	currentEnv, err := internal.ReadCurrentEnv()
+	currentEnv, source, err := internal.ReadCurrentEnvWithSource()
 	internal.HandleError(err)
 
 	if currentEnv == "" {
 		fmt.Println("Expected env: not set")
 	} else {
-		fmt.Printf("Expected env: %s\n", currentEnv)
+		fmt.Printf("Expected env: %s (%s)\n", currentEnv, source)
 	}
 
 	client, err := internal.NewStsClient()
