@@ -3,12 +3,10 @@ package internal
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	"github.com/olekukonko/tablewriter"
 )
 
 type StsClient struct {
@@ -39,12 +37,9 @@ func (s *StsClient) GetCallerIdentity() (*sts.GetCallerIdentityOutput, error) {
 }
 
 func PrintCallerIdentityTable(identity *sts.GetCallerIdentityOutput, name string) {
-	// Create a new table
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Account", "Role Arn", "User ID"})
-	table.SetAlignment(tablewriter.ALIGN_CENTER)
-	table.Append([]string{name, *identity.Account, *identity.Arn, *identity.UserId})
-	table.Render()
+	fmt.Printf("Account:  %s (%s)\n", name, *identity.Account)
+	fmt.Printf("ARN:      %s\n", *identity.Arn)
+	fmt.Printf("User ID:  %s\n", *identity.UserId)
 }
 
 func AssertAccountAsExpected(identity *sts.GetCallerIdentityOutput, expectedAccount string) error {

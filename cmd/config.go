@@ -61,10 +61,10 @@ var addCmd = &cobra.Command{
 }
 
 func viewEntrypoint(cmd *cobra.Command, args []string) {
-	cfg, err := internal.LoadEffectiveConfig()
+	cfg, sources, err := internal.LoadEffectiveConfigWithSources()
 	internal.HandleError(err)
 
-	cfg.PrintConfigTable()
+	cfg.PrintConfigTableWithSource(sources)
 
 	os.Exit(0)
 }

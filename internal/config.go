@@ -41,13 +41,24 @@ func NewProjectConfigPath() (*ConfigPath, error) {
 
 // FindLocalConfigPath walks up the directory tree from CWD looking for a .whoiam/whoiam.yaml.
 // Returns nil (no error) if no local config is found.
+// Stops before reaching the home directory to avoid treating ~/.whoiam/whoiam.yaml as local.
 func FindLocalConfigPath() (*ConfigPath, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
 
+	usr, err := user.Current()
+	if err != nil {
+		return nil, err
+	}
+	homeDir := usr.HomeDir
+
 	for {
+		// Don't pick up the global config as a local one.
+		if dir == homeDir {
+			return nil, nil
+		}
 		candidate := filepath.Join(dir, ".whoiam", "whoiam.yaml")
 		if _, err := os.Stat(candidate); err == nil {
 			return &ConfigPath{Path: filepath.Join(dir, ".whoiam"), File: "whoiam.yaml"}, nil
@@ -63,38 +74,51 @@ func FindLocalConfigPath() (*ConfigPath, error) {
 // LoadEffectiveConfig loads the global config and merges any project-local config on top.
 // Local account definitions take precedence over global ones on conflict.
 func LoadEffectiveConfig() (*Config, error) {
+	cfg, _, err := LoadEffectiveConfigWithSources()
+	return cfg, err
+}
+
+// LoadEffectiveConfigWithSources is like LoadEffectiveConfig but also returns a map of
+// account name -> source ("global" or "local") for each entry.
+func LoadEffectiveConfigWithSources() (*Config, map[string]string, error) {
 	globalPath, err := NewConfigPath()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	cfg := &Config{Accounts: make(map[string]string)}
+	sources := make(map[string]string)
+
 	if globalPath.ConfigFileExists() {
 		cfg, err = globalPath.LoadConfig()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
+		}
+		for name := range cfg.Accounts {
+			sources[name] = "global"
 		}
 	}
 
 	localPath, err := FindLocalConfigPath()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if localPath == nil {
-		return cfg, nil
+		return cfg, sources, nil
 	}
 
 	localCfg, err := localPath.LoadConfig()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	for name, number := range localCfg.Accounts {
 		cfg.Accounts[name] = number
+		sources[name] = "local"
 	}
 
-	return cfg, nil
+	return cfg, sources, nil
 }
 
 // FindLocalDir walks up from CWD looking for a .whoiam/ directory.
@@ -265,11 +289,23 @@ func (c *Config) GetAccountByNumber(number string) string {
 }
 
 func (c *Config) PrintConfigTable() {
+	c.PrintConfigTableWithSource(nil)
+}
+
+func (c *Config) PrintConfigTableWithSource(sources map[string]string) {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Account Name", "Account Number"})
 	table.SetAlignment(tablewriter.ALIGN_CENTER)
-	for name, account := range c.Accounts {
-		table.Append([]string{name, account})
+	if sources != nil {
+		table.SetHeader([]string{"Account Name", "Account Number", "Source"})
+		for name, account := range c.Accounts {
+			source := sources[name]
+			table.Append([]string{name, account, source})
+		}
+	} else {
+		table.SetHeader([]string{"Account Name", "Account Number"})
+		for name, account := range c.Accounts {
+			table.Append([]string{name, account})
+		}
 	}
 	table.Render()
 }
