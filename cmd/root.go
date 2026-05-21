@@ -44,6 +44,3 @@ func Execute() {
 	}
 }
 
-func init() {
-
-}

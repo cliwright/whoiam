@@ -12,7 +12,8 @@ import (
 )
 
 func projectInitEntrypoint(cmd *cobra.Command, args []string) {
-	global, _ := cmd.Flags().GetBool("global")
+	global, err := cmd.Flags().GetBool("global")
+	internal.HandleError(err)
 
 	if global {
 		globalPath, err := internal.NewConfigPath()

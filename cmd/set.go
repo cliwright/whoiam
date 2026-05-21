@@ -11,7 +11,8 @@ import (
 )
 
 func setEntrypoint(cmd *cobra.Command, args []string) {
-	global, _ := cmd.Flags().GetBool("global")
+	global, err := cmd.Flags().GetBool("global")
+	internal.HandleError(err)
 
 	if len(args) == 0 {
 		if global {

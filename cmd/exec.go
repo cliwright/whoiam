@@ -20,7 +20,7 @@ func execEntrypoint(cmd *cobra.Command, args []string) {
 	}
 
 	if accountName == "" {
-		fmt.Println("No account specified — use --account or run 'whoiam set <account>'")
+		fmt.Println("No account specified — use --env or run 'whoiam set <account>'")
 		os.Exit(1)
 	}
 
