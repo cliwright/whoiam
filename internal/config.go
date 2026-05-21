@@ -5,7 +5,6 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"gopkg.in/yaml.v3"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -23,12 +22,11 @@ type Config struct {
 }
 
 func NewConfigPath() (*ConfigPath, error) {
-	usr, err := user.Current()
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
 	}
-	path := filepath.Join(usr.HomeDir, ".whoiam")
-	return &ConfigPath{Path: path, File: "whoiam.yaml"}, nil
+	return &ConfigPath{Path: filepath.Join(homeDir, ".whoiam"), File: "whoiam.yaml"}, nil
 }
 
 // NewProjectConfigPath returns a ConfigPath rooted at .whoiam/ in the current directory.
@@ -50,11 +48,10 @@ func FindLocalConfigPath() (*ConfigPath, error) {
 		return nil, err
 	}
 
-	usr, err := user.Current()
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
 	}
-	homeDir := usr.HomeDir
 
 	for {
 		// Don't pick up the global config as a local one.
@@ -131,11 +128,10 @@ func FindLocalDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	usr, err := user.Current()
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	homeDir := usr.HomeDir
 
 	for {
 		if dir == homeDir {
