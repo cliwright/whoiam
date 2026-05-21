@@ -27,7 +27,7 @@ func NewConfigPath() (*ConfigPath, error) {
 	if err != nil {
 		return nil, err
 	}
-	path := usr.HomeDir + "/.whoiam"
+	path := filepath.Join(usr.HomeDir, ".whoiam")
 	return &ConfigPath{Path: path, File: "whoiam.yaml"}, nil
 }
 
@@ -309,7 +309,7 @@ func (c *ConfigPath) FullPath() string {
 }
 
 func (c *ConfigPath) Create() error {
-	return os.MkdirAll(c.Path, os.ModePerm)
+	return os.MkdirAll(c.Path, 0700)
 }
 
 func (c *ConfigPath) LoadConfig() (*Config, error) {
@@ -331,7 +331,7 @@ func (c *ConfigPath) SaveConfig(config *Config) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(c.FullPath(), data, os.ModePerm)
+	return os.WriteFile(c.FullPath(), data, 0644)
 }
 
 func (c *Config) AccountExists(name string) bool {

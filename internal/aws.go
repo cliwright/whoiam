@@ -36,14 +36,21 @@ func (s *StsClient) GetCallerIdentity() (*sts.GetCallerIdentityOutput, error) {
 }
 
 func PrintCallerIdentityTable(identity *sts.GetCallerIdentityOutput, name string) {
+	if identity.Account == nil || identity.Arn == nil || identity.UserId == nil {
+		fmt.Println("error: incomplete identity response from AWS")
+		return
+	}
 	fmt.Printf("Account:  %s (%s)\n", name, *identity.Account)
 	fmt.Printf("ARN:      %s\n", *identity.Arn)
 	fmt.Printf("User ID:  %s\n", *identity.UserId)
 }
 
 func AssertAccountAsExpected(identity *sts.GetCallerIdentityOutput, expectedAccount string) error {
+	if identity.Account == nil {
+		return fmt.Errorf("incomplete identity response from AWS: account field is nil")
+	}
 	if *identity.Account != expectedAccount {
-		return fmt.Errorf("Expected account %s, but got %s", expectedAccount, *identity.Account)
+		return fmt.Errorf("expected account %s, but got %s", expectedAccount, *identity.Account)
 	}
 	return nil
 }
