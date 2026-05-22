@@ -50,4 +50,3 @@ git clone https://github.com/pytoolbelt/whoiam.git && \
 cd whoiam && \
 go build -o whoiam
 ```
-```
