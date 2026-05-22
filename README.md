@@ -1,11 +1,19 @@
 [![Sketch fonts](https://see.fontimg.com/api/rf5/BWWo5/YTZkZTMxNDlhNDEwNDZhZmFiZThhODFhNjA5N2U3NTgub3Rm/d2hvaWFt/typo-draft-demo.png?r=fs&h=250&w=2000&fg=5A3922&bg=FFFFFF&tb=1&s=125)](https://www.fontspace.com/typo-draft-font-f41179)
 
-`whoiam` is a CLI that allow you to run a command for a specific AWS account. This safeguards you from running a command in the wrong AWS account
-and deploying or destroying resources where you didn't intend to.
+`whoiam` is a CLI tool that prevents fat-finger deployments to the wrong AWS account — because nothing ruins your morning quite like realising you just ran `terraform apply` against production.
+
+<div align="center"><a href="https://imgflip.com/i/ashxye"><img src="https://i.imgflip.com/ashxye.jpg" title="made at imgflip.com"/></a></div>
+
+You know that sinking feeling. You get dizzy and the walls start closing in on you. Was your session pointed to dev... or prod?
+You know your team shouldn't have local production credentials, but hey... startups. We've all been there.
+
+This has happened to me, and teams I have worked on more times than I care to admit. And that's why I built `whoiam`
+A CLI tool that prevents accidental deployments to the wrong AWS account. Before running a command, it verifies that
+your current credentials match the account you expect — protecting you from "fat finger" mistakes when working across multiple environments.
 
 ## Features
 
-- Run command for a specific AWS account
+- Run commands scoped to a specific AWS account
 - Retrieve AWS IAM Role information
 - Supports multiple AWS accounts
 
