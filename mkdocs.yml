@@ -4,10 +4,13 @@ theme:
   icon:
     repo: fontawesome/brands/git-alt
   palette:
-    primary: deep purple
+    scheme: whoiam
 
-repo_url: https://github.com/pytoolbelt/whoiam
-repo_name: pytoolbelt/whoiam
+extra_css:
+  - stylesheets/palette.css
+
+repo_url: https://github.com/cliwright/whoiam
+repo_name: cliwright/whoiam
 
 nav:
   - Home: index.md
