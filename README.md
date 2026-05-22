@@ -1,3 +1,4 @@
+[![Sketch fonts](https://see.fontimg.com/api/rf5/BWWo5/YTZkZTMxNDlhNDEwNDZhZmFiZThhODFhNjA5N2U3NTgub3Rm/d2hvaWFt/typo-draft-demo.png?r=fs&h=250&w=2000&fg=5A3922&bg=FFFFFF&tb=1&s=125)](https://www.fontspace.com/typo-draft-font-f41179)
 
 `whoiam` is a CLI that allow you to run a command for a specific AWS account. This safeguards you from running a command in the wrong AWS account
 and deploying or destroying resources where you didn't intend to.
@@ -9,39 +10,39 @@ and deploying or destroying resources where you didn't intend to.
 - Supports multiple AWS accounts
 
 ## Documentation
-For more information and usage examples, please refer to the [documentation](https://pytoolbelt.github.io/whoiam/).
+For more information and usage examples, please refer to the [documentation](https://cliwright.github.io/whoiam/).
 
 ## Installation
 
 ### Using Homebrew
 
 ```sh
-brew tap pytoolbelt/homebrew-awstools
+brew tap cliwright/homebrew-awstools
 brew install whoiam
 ```
 
 ### Download Binary
 
-You can download the pre-compiled binaries from the [releases page](https://github.com/pytoolbelt/whoiam/releases).
+You can download the pre-compiled binaries from the [releases page](https://github.com/cliwright/whoiam/releases).
 
 To download the pre-compiled binaries from the releases page using `curl`, you can use the following commands. Replace `VERSION`, `OS`, and `ARCH` with the appropriate values for the version, operating system, and architecture you need.
 
 For example, to download the Linux binary for version `v1.0.0`:
 
 ```sh
-curl -L -o whoiam_linux_x86_64.tar.gz https://github.com/pytoolbelt/whoiam/releases/download/v1.0.0/whoiam_Linux_x86_64.tar.gz
+curl -L -o whoiam_linux_x86_64.tar.gz https://github.com/cliwright/whoiam/releases/download/v1.0.0/whoiam_Linux_x86_64.tar.gz
 ```
 
 For the Windows binary:
 
 ```sh
-curl -L -o whoiam_windows_x86_64.zip https://github.com/pytoolbelt/whoiam/releases/download/v1.0.0/whoiam_Windows_x86_64.zip
+curl -L -o whoiam_windows_x86_64.zip https://github.com/cliwright/whoiam/releases/download/v1.0.0/whoiam_Windows_x86_64.zip
 ```
 
 For the macOS binary:
 
 ```sh
-curl -L -o whoiam_darwin_x86_64.tar.gz https://github.com/pytoolbelt/whoiam/releases/download/v1.0.0/whoiam_Darwin_x86_64.tar.gz
+curl -L -o whoiam_darwin_x86_64.tar.gz https://github.com/cliwright/whoiam/releases/download/v1.0.0/whoiam_Darwin_x86_64.tar.gz
 ```
 
 Make sure to replace `v1.0.0` with the actual version number you want to download.
@@ -49,7 +50,7 @@ Make sure to replace `v1.0.0` with the actual version number you want to downloa
 ### Build from Source
 
 ```sh
-git clone https://github.com/pytoolbelt/whoiam.git
+git clone https://github.com/cliwright/whoiam.git
 cd whoiam
 go build -o whoiam
 ```
@@ -81,5 +82,5 @@ This project is licensed under the Apache License, Version 2.0. See the [LICENSE
 
 ## Author
 
-Jesse Maitland - [jesse@pytoolbelt.com](mailto:jesse@pytoolbelt.com)
+Jesse Maitland - [jesse@cliwright.com](mailto:jesse@cliwright.com)
 ```

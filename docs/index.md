@@ -2,9 +2,6 @@
 
 `whoiam` is a CLI tool that prevents accidental deployments to the wrong AWS account. Before running a command, it verifies that your current credentials match the account you expect — protecting you from "fat finger" mistakes when working across multiple environments.
 
-https://www.fontspace.com/typo-draft-font-f41179
-
-
 ## Features
 
 - **Account verification** — assert that current credentials match a named account before running any command
