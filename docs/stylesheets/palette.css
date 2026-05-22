@@ -1,0 +1,71 @@
+[data-md-color-scheme="whoiam"] {
+  --md-primary-fg-color:        #5A3922;
+  --md-primary-fg-color--light: #A8C4D5;
+  --md-primary-fg-color--dark:  #3d2616;
+
+  --md-accent-fg-color:         #F28A2E;
+  --md-accent-fg-color--transparent: #F28A2E1a;
+
+  --md-default-bg-color:        #FDF8EF;
+  --md-default-fg-color:        #5A3922;
+  --md-default-fg-color--light: #5A392299;
+  --md-default-fg-color--lighter: #5A392266;
+  --md-default-fg-color--lightest: #5A392233;
+
+  --md-typeset-a-color:         #F28A2E;
+
+  --md-code-bg-color:           #f2ece0;
+  --md-code-fg-color:           #3d2616;
+
+  --md-footer-bg-color:         #5A3922;
+  --md-footer-bg-color--dark:   #3d2616;
+  --md-footer-fg-color:         #F5F0E6;
+  --md-footer-fg-color--light:  #F5F0E6cc;
+  --md-footer-fg-color--lighter: #F5F0E699;
+}
+
+/* Header accent line */
+.md-header {
+  border-bottom: 3px solid #F28A2E;
+}
+
+/* Horizontal rule — gradient across the palette */
+.md-typeset hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(to right, #A8C4D5, #F28A2E, #5A3922);
+  opacity: 0.5;
+  margin: 2em 0;
+}
+
+/* Code block left accent */
+.md-typeset pre {
+  border-left: 4px solid #F28A2E;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Blockquote accent */
+.md-typeset blockquote {
+  border-left: 4px solid #A8C4D5;
+  background-color: #f5f0e4;
+  padding: 0.6em 1em;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Active nav item highlight */
+.md-nav__item .md-nav__link--active {
+  color: #F28A2E;
+  font-weight: 600;
+}
+
+/* Table header tint */
+.md-typeset table:not([class]) th {
+  background-color: #5A392215;
+  color: #5A3922;
+}
+
+/* Table row stripe */
+.md-typeset table:not([class]) tr:nth-child(even) {
+  background-color: #F5F0E6;
+}
+
