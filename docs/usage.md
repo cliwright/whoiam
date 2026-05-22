@@ -86,6 +86,25 @@ tasks:
       - terraform apply
 ```
 
+```toml
+# mise.toml example
+# Automatically pin to dev when you enter the project
+[hooks.enter]
+run = "whoiam set development"
+
+# Tasks can then validate explicitly or use whoiam exec
+[tasks.deploy]
+depends = ["whoiam:validate"]
+run = "terraform apply"
+
+[tasks."whoiam:validate"]
+run = "whoiam validate --env production"
+
+# Or use whoiam exec to wrap the command directly
+[tasks.deploy-safe]
+run = "whoiam exec --env production -- terraform apply"
+```
+
 ---
 
 ## Exec
