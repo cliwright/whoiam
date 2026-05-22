@@ -6,22 +6,21 @@ package cmd
 import (
 	"github.com/pytoolbelt/whoiam/internal"
 	"github.com/spf13/cobra"
-	"os"
 )
 
-func configEntrypoint(cmd *cobra.Command, args []string) {
+func configEntrypoint(cmd *cobra.Command, args []string) error {
 	cfg, sources, err := internal.LoadEffectiveConfigWithSources()
-	internal.HandleError(err)
-
-	cfg.PrintConfigTableWithSource(sources)
-
-	os.Exit(0)
+	if err != nil {
+		return err
+	}
+	cfg.PrintConfigTableWithSource(cmd.OutOrStdout(), sources)
+	return nil
 }
 
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Print the effective whoiam config (global + project-local merged)",
-	Run:   configEntrypoint,
+	RunE:  configEntrypoint,
 }
 
 func init() {

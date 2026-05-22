@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bytes"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -610,25 +609,12 @@ func TestConfigPathLoadConfig_InvalidYAML(t *testing.T) {
 
 // --- PrintConfigTable / PrintConfigTableWithSource ---
 
-func captureStdout(t *testing.T, fn func()) string {
-	t.Helper()
-	orig := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	os.Stdout = w
-	fn()
-	w.Close()
-	os.Stdout = orig
-	var buf bytes.Buffer
-	io.Copy(&buf, r)
-	return buf.String()
-}
 
 func TestPrintConfigTable(t *testing.T) {
 	cfg := &Config{Accounts: map[string]string{"dev": "111111111111"}}
-	out := captureStdout(t, func() { cfg.PrintConfigTable() })
+	var buf bytes.Buffer
+	cfg.PrintConfigTable(&buf)
+	out := buf.String()
 	if !strings.Contains(out, "dev") {
 		t.Errorf("expected output to contain account name, got: %s", out)
 	}
@@ -640,7 +626,9 @@ func TestPrintConfigTable(t *testing.T) {
 func TestPrintConfigTableWithSource_WithSources(t *testing.T) {
 	cfg := &Config{Accounts: map[string]string{"prod": "222222222222"}}
 	sources := map[string]string{"prod": "global"}
-	out := captureStdout(t, func() { cfg.PrintConfigTableWithSource(sources) })
+	var buf bytes.Buffer
+	cfg.PrintConfigTableWithSource(&buf, sources)
+	out := buf.String()
 	if !strings.Contains(out, "prod") {
 		t.Errorf("expected output to contain account name, got: %s", out)
 	}
@@ -651,7 +639,9 @@ func TestPrintConfigTableWithSource_WithSources(t *testing.T) {
 
 func TestPrintConfigTableWithSource_NilSources(t *testing.T) {
 	cfg := &Config{Accounts: map[string]string{"staging": "333333333333"}}
-	out := captureStdout(t, func() { cfg.PrintConfigTableWithSource(nil) })
+	var buf bytes.Buffer
+	cfg.PrintConfigTableWithSource(&buf, nil)
+	out := buf.String()
 	if !strings.Contains(out, "staging") {
 		t.Errorf("expected output to contain account name, got: %s", out)
 	}

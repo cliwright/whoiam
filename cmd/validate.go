@@ -7,44 +7,51 @@ import (
 	"fmt"
 	"github.com/pytoolbelt/whoiam/internal"
 	"github.com/spf13/cobra"
-	"os"
 )
 
-func validateEntrypoint(cmd *cobra.Command, args []string) {
-	accountName, _ := cmd.Flags().GetString("env")
+func validateEntrypoint(cmd *cobra.Command, args []string) error {
+	accountName, err := cmd.Flags().GetString("env")
+	if err != nil {
+		return err
+	}
 
 	if accountName == "" {
 		envAccount, err := internal.ReadCurrentEnv()
-		internal.HandleError(err)
+		if err != nil {
+			return err
+		}
 		accountName = envAccount
 	}
 
 	if accountName == "" {
-		fmt.Println("No account specified — use --env or run 'whoiam set <account>'")
-		os.Exit(1)
+		return fmt.Errorf("no account specified — use --env or run 'whoiam set <account>'")
 	}
 
 	cfg, err := internal.LoadEffectiveConfig()
-	internal.HandleError(err)
+	if err != nil {
+		return err
+	}
 
 	if !cfg.AccountExists(accountName) {
-		fmt.Printf("Account %q does not exist in config\n", accountName)
-		os.Exit(1)
+		return fmt.Errorf("account %q does not exist in config", accountName)
 	}
 
 	client, err := internal.NewStsClient()
-	internal.HandleError(err)
-
-	identity, err := client.GetCallerIdentity()
-	internal.HandleError(err)
-
-	expectedNumber := cfg.Accounts[accountName]
-	if *identity.Account != expectedNumber {
-		fmt.Printf("Account mismatch: expected %s (%s), got %s\n", accountName, expectedNumber, *identity.Account)
-		os.Exit(1)
+	if err != nil {
+		return err
 	}
 
-	fmt.Printf("OK: %s (%s)\n", accountName, expectedNumber)
+	identity, err := client.GetCallerIdentity()
+	if err != nil {
+		return err
+	}
+
+	if err := internal.AssertAccountAsExpected(identity, cfg.Accounts[accountName]); err != nil {
+		return fmt.Errorf("account mismatch: expected %s (%s), got %s", accountName, cfg.Accounts[accountName], *identity.Account)
+	}
+
+	cmd.Printf("OK: %s (%s)\n", accountName, cfg.Accounts[accountName])
+	return nil
 }
 
 var validateCmd = &cobra.Command{
@@ -60,7 +67,7 @@ the project session set by 'whoiam set'.
 Examples:
   whoiam validate                    # uses current-env
   whoiam validate --env production   # explicit environment`,
-	Run: validateEntrypoint,
+	RunE: validateEntrypoint,
 }
 
 func init() {

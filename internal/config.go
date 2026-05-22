@@ -2,12 +2,14 @@ package internal
 
 import (
 	"fmt"
-	"github.com/olekukonko/tablewriter"
-	"gopkg.in/yaml.v3"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/olekukonko/tablewriter"
+	"gopkg.in/yaml.v3"
 )
 
 const ExpectedEnvVar = "WHOIAM_EXPECTED_ENV"
@@ -356,12 +358,12 @@ func (c *Config) GetAccountByNumber(number string) string {
 	return ""
 }
 
-func (c *Config) PrintConfigTable() {
-	c.PrintConfigTableWithSource(nil)
+func (c *Config) PrintConfigTable(w io.Writer) {
+	c.PrintConfigTableWithSource(w, nil)
 }
 
-func (c *Config) PrintConfigTableWithSource(sources map[string]string) {
-	table := tablewriter.NewWriter(os.Stdout)
+func (c *Config) PrintConfigTableWithSource(w io.Writer, sources map[string]string) {
+	table := tablewriter.NewWriter(w)
 	table.SetAlignment(tablewriter.ALIGN_CENTER)
 	if sources != nil {
 		table.SetHeader([]string{"Account Name", "Account Number", "Source"})
@@ -378,9 +380,3 @@ func (c *Config) PrintConfigTableWithSource(sources map[string]string) {
 	table.Render()
 }
 
-func HandleError(err error) {
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}

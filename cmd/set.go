@@ -7,45 +7,52 @@ import (
 	"fmt"
 	"github.com/pytoolbelt/whoiam/internal"
 	"github.com/spf13/cobra"
-	"os"
 )
 
-func setEntrypoint(cmd *cobra.Command, args []string) {
+func setEntrypoint(cmd *cobra.Command, args []string) error {
 	global, err := cmd.Flags().GetBool("global")
-	internal.HandleError(err)
+	if err != nil {
+		return err
+	}
 
 	if len(args) == 0 {
 		if global {
-			err := internal.ClearGlobalCurrentEnv()
-			internal.HandleError(err)
-			fmt.Println("Cleared global expected account")
+			if err := internal.ClearGlobalCurrentEnv(); err != nil {
+				return err
+			}
+			cmd.Println("Cleared global expected account")
 		} else {
-			err := internal.ClearCurrentEnv()
-			internal.HandleError(err)
-			fmt.Println("Cleared expected account")
+			if err := internal.ClearCurrentEnv(); err != nil {
+				return err
+			}
+			cmd.Println("Cleared expected account")
 		}
-		return
+		return nil
 	}
 
 	accountName := args[0]
 
 	cfg, err := internal.LoadEffectiveConfig()
-	internal.HandleError(err)
+	if err != nil {
+		return err
+	}
 
 	if !cfg.AccountExists(accountName) {
-		fmt.Printf("Account %q does not exist in config\n", accountName)
-		os.Exit(1)
+		return fmt.Errorf("account %q does not exist in config", accountName)
 	}
 
 	if global {
-		err = internal.WriteGlobalCurrentEnv(accountName)
-		internal.HandleError(err)
-		fmt.Printf("Global expected account set to %q\n", accountName)
+		if err := internal.WriteGlobalCurrentEnv(accountName); err != nil {
+			return err
+		}
+		cmd.Printf("Global expected account set to %q\n", accountName)
 	} else {
-		err = internal.WriteCurrentEnv(accountName)
-		internal.HandleError(err)
-		fmt.Printf("Expected account set to %q\n", accountName)
+		if err := internal.WriteCurrentEnv(accountName); err != nil {
+			return err
+		}
+		cmd.Printf("Expected account set to %q\n", accountName)
 	}
+	return nil
 }
 
 var setCmd = &cobra.Command{
@@ -64,7 +71,7 @@ Examples:
   whoiam set                      # clear local expected environment
   whoiam set --global             # clear global expected environment`,
 	Args: cobra.MaximumNArgs(1),
-	Run:  setEntrypoint,
+	RunE: setEntrypoint,
 }
 
 func init() {

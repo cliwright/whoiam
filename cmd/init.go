@@ -11,57 +11,71 @@ import (
 	"path/filepath"
 )
 
-func projectInitEntrypoint(cmd *cobra.Command, args []string) {
+func projectInitEntrypoint(cmd *cobra.Command, args []string) error {
 	global, err := cmd.Flags().GetBool("global")
-	internal.HandleError(err)
+	if err != nil {
+		return err
+	}
 
 	if global {
 		globalPath, err := internal.NewConfigPath()
-		internal.HandleError(err)
-
-		if globalPath.ConfigFileExists() {
-			fmt.Printf("Global config already exists at %s\n", globalPath.FullPath())
-			os.Exit(1)
+		if err != nil {
+			return err
 		}
 
-		err = globalPath.Create()
-		internal.HandleError(err)
+		if globalPath.ConfigFileExists() {
+			return fmt.Errorf("global config already exists at %s", globalPath.FullPath())
+		}
+
+		if err := globalPath.Create(); err != nil {
+			return err
+		}
 
 		cfg, err := internal.NewTemplateConfig()
-		internal.HandleError(err)
+		if err != nil {
+			return err
+		}
 
-		err = globalPath.SaveConfig(cfg)
-		internal.HandleError(err)
+		if err := globalPath.SaveConfig(cfg); err != nil {
+			return err
+		}
 
-		fmt.Printf("Initialized global config at %s\n", globalPath.FullPath())
-		return
+		cmd.Printf("Initialized global config at %s\n", globalPath.FullPath())
+		return nil
 	}
 
 	localPath, err := internal.NewProjectConfigPath()
-	internal.HandleError(err)
-
-	if localPath.Exists() {
-		fmt.Printf("Project config already exists at %s\n", localPath.FullPath())
-		os.Exit(1)
+	if err != nil {
+		return err
 	}
 
-	err = localPath.Create()
-	internal.HandleError(err)
+	if localPath.Exists() {
+		return fmt.Errorf("project config already exists at %s", localPath.FullPath())
+	}
+
+	if err := localPath.Create(); err != nil {
+		return err
+	}
 
 	cfg, err := internal.NewTemplateConfig()
-	internal.HandleError(err)
+	if err != nil {
+		return err
+	}
 
-	err = localPath.SaveConfig(cfg)
-	internal.HandleError(err)
+	if err := localPath.SaveConfig(cfg); err != nil {
+		return err
+	}
 
 	// Create .gitignore to exclude expected-env (session state, not shared config)
 	gitignorePath := filepath.Join(localPath.Path, ".gitignore")
-	err = os.WriteFile(gitignorePath, []byte("expected-env\n"), 0644)
-	internal.HandleError(err)
+	if err := os.WriteFile(gitignorePath, []byte("expected-env\n"), 0644); err != nil {
+		return err
+	}
 
-	fmt.Printf("Initialized project config at %s\n", localPath.FullPath())
-	fmt.Println("Edit the config file to add your project's AWS account mappings.")
-	fmt.Println("Tip: commit .whoiam/whoiam.yaml to share account mappings with your team.")
+	cmd.Printf("Initialized project config at %s\n", localPath.FullPath())
+	cmd.Println("Edit the config file to add your project's AWS account mappings.")
+	cmd.Println("Tip: commit .whoiam/whoiam.yaml to share account mappings with your team.")
+	return nil
 }
 
 var projectInitCmd = &cobra.Command{
@@ -74,7 +88,7 @@ Pass --global to initialize the global config at ~/.whoiam/whoiam.yaml instead.
 
 Commit .whoiam/whoiam.yaml to share account name mappings with your team.
 Do not commit .whoiam/expected-env — it is personal session state.`,
-	Run: projectInitEntrypoint,
+	RunE: projectInitEntrypoint,
 }
 
 func init() {

@@ -5,52 +5,63 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/pytoolbelt/whoiam/internal"
 	"github.com/spf13/cobra"
-	"os"
 )
 
-func execEntrypoint(cmd *cobra.Command, args []string) {
-	accountName, _ := cmd.Flags().GetString("env")
+func execEntrypoint(cmd *cobra.Command, args []string) error {
+	accountName, err := cmd.Flags().GetString("env")
+	if err != nil {
+		return err
+	}
 
 	if accountName == "" {
 		envAccount, err := internal.ReadCurrentEnv()
-		internal.HandleError(err)
+		if err != nil {
+			return err
+		}
 		accountName = envAccount
 	}
 
 	if accountName == "" {
-		fmt.Println("No account specified — use --env or run 'whoiam set <account>'")
-		os.Exit(1)
+		return fmt.Errorf("no account specified — use --env or run 'whoiam set <account>'")
 	}
 
 	if len(args) == 0 {
-		fmt.Println("No command provided starting subshell. Type 'exit' to return to the parent shell")
+		cmd.Println("No command provided starting subshell. Type 'exit' to return to the parent shell")
 	}
 
 	cfg, err := internal.LoadEffectiveConfig()
-	internal.HandleError(err)
+	if err != nil {
+		return err
+	}
 
 	if !cfg.AccountExists(accountName) {
-		fmt.Printf("Account %q does not exist in config\n", accountName)
-		os.Exit(1)
+		return fmt.Errorf("account %q does not exist in config", accountName)
 	}
 
 	client, err := internal.NewStsClient()
-	internal.HandleError(err)
+	if err != nil {
+		return err
+	}
 
 	identity, err := client.GetCallerIdentity()
-	internal.HandleError(err)
+	if err != nil {
+		return err
+	}
 
-	err = internal.AssertAccountAsExpected(identity, cfg.Accounts[accountName])
-	internal.HandleError(err)
-	fmt.Printf("Verified: AWS account %s (%s)\n", accountName, cfg.Accounts[accountName])
+	if err := internal.AssertAccountAsExpected(identity, cfg.Accounts[accountName]); err != nil {
+		return err
+	}
+	cmd.Printf("Verified: AWS account %s (%s)\n", accountName, cfg.Accounts[accountName])
 
 	shell, err := internal.NewSubShell(args...)
-	internal.HandleError(err)
+	if err != nil {
+		return err
+	}
 
-	err = shell.Run()
-	internal.HandleError(err)
+	return shell.Run()
 }
 
 // execCmd represents the exec command
@@ -64,7 +75,7 @@ subshell with the account assertion already satisfied.
 Example:
   whoiam exec --env production terraform apply
   whoiam exec --env staging`,
-	Run: execEntrypoint,
+	RunE: execEntrypoint,
 }
 
 func init() {
