@@ -15,8 +15,13 @@ func validateEntrypoint(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	cfg, err := internal.LoadEffectiveConfig()
+	if err != nil {
+		return err
+	}
+
 	if accountName == "" {
-		envAccount, err := internal.ReadCurrentEnv()
+		envAccount, _, err := internal.ReadCurrentEnvForConfig(cfg)
 		if err != nil {
 			return err
 		}
@@ -25,11 +30,6 @@ func validateEntrypoint(cmd *cobra.Command, args []string) error {
 
 	if accountName == "" {
 		return fmt.Errorf("no account specified — use --env or run 'whoiam set <account>'")
-	}
-
-	cfg, err := internal.LoadEffectiveConfig()
-	if err != nil {
-		return err
 	}
 
 	if !cfg.AccountExists(accountName) {

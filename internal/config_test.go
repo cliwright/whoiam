@@ -570,6 +570,93 @@ func TestLoadEffectiveConfigWithSources_GlobalAndLocal(t *testing.T) {
 	}
 }
 
+func TestReadCurrentEnvForConfig_AwsProfile_Matched(t *testing.T) {
+	t.Setenv(ExpectedEnvVar, "")
+	t.Setenv(AwsProfileEnvVar, "staging")
+
+	cfg := &Config{Accounts: map[string]string{"staging": "333333333333"}}
+
+	name, source, err := ReadCurrentEnvForConfig(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if name != "staging" {
+		t.Errorf("expected staging, got %q", name)
+	}
+	if source != "AWS_PROFILE" {
+		t.Errorf("expected AWS_PROFILE, got %q", source)
+	}
+}
+
+func TestReadCurrentEnvForConfig_AwsProfile_NoMatch(t *testing.T) {
+	t.Setenv(ExpectedEnvVar, "")
+	t.Setenv(AwsProfileEnvVar, "default")
+
+	root := t.TempDir()
+	whoiamDir := filepath.Join(root, ".whoiam")
+	os.MkdirAll(whoiamDir, 0700)
+	os.WriteFile(filepath.Join(whoiamDir, "expected-env"), []byte("staging\n"), 0644)
+	chdirTemp(t, root)
+
+	// "default" is not in the config, so it should fall through to the local file
+	cfg := &Config{Accounts: map[string]string{"staging": "333333333333"}}
+
+	name, source, err := ReadCurrentEnvForConfig(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if name != "staging" {
+		t.Errorf("expected staging (from local file), got %q", name)
+	}
+	if source != "local" {
+		t.Errorf("expected local, got %q", source)
+	}
+}
+
+func TestReadCurrentEnvForConfig_AwsProfile_PrecedenceAfterEnvVar(t *testing.T) {
+	t.Setenv(ExpectedEnvVar, "production")
+	t.Setenv(AwsProfileEnvVar, "staging")
+
+	cfg := &Config{Accounts: map[string]string{
+		"production": "111111111111",
+		"staging":    "333333333333",
+	}}
+
+	name, source, err := ReadCurrentEnvForConfig(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if name != "production" {
+		t.Errorf("expected WHOIAM_EXPECTED_ENV to win, got %q", name)
+	}
+	if source != "env" {
+		t.Errorf("expected env, got %q", source)
+	}
+}
+
+func TestReadCurrentEnvWithSource_IgnoresAwsProfile(t *testing.T) {
+	t.Setenv(ExpectedEnvVar, "")
+	t.Setenv(AwsProfileEnvVar, "staging")
+
+	// ReadCurrentEnvWithSource has no config, so AWS_PROFILE should be ignored
+	root := t.TempDir()
+	whoiamDir := filepath.Join(root, ".whoiam")
+	os.MkdirAll(whoiamDir, 0700)
+	os.WriteFile(filepath.Join(whoiamDir, "expected-env"), []byte("dev\n"), 0644)
+	chdirTemp(t, root)
+
+	name, source, err := ReadCurrentEnvWithSource()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if name != "dev" {
+		t.Errorf("expected dev (AWS_PROFILE ignored without config), got %q", name)
+	}
+	if source != "local" {
+		t.Errorf("expected local, got %q", source)
+	}
+}
+
 func TestReadCurrentEnvWithSource_GlobalFallback(t *testing.T) {
 	t.Setenv(ExpectedEnvVar, "")
 

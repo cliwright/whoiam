@@ -16,8 +16,13 @@ func execEntrypoint(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	cfg, err := internal.LoadEffectiveConfig()
+	if err != nil {
+		return err
+	}
+
 	if accountName == "" {
-		envAccount, err := internal.ReadCurrentEnv()
+		envAccount, _, err := internal.ReadCurrentEnvForConfig(cfg)
 		if err != nil {
 			return err
 		}
@@ -30,11 +35,6 @@ func execEntrypoint(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 0 {
 		cmd.Println("No command provided starting subshell. Type 'exit' to return to the parent shell")
-	}
-
-	cfg, err := internal.LoadEffectiveConfig()
-	if err != nil {
-		return err
 	}
 
 	if !cfg.AccountExists(accountName) {

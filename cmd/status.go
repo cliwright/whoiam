@@ -9,7 +9,12 @@ import (
 )
 
 func statusEntrypoint(cmd *cobra.Command, args []string) error {
-	currentEnv, source, err := internal.ReadCurrentEnvWithSource()
+	cfg, err := internal.LoadEffectiveConfig()
+	if err != nil {
+		return err
+	}
+
+	currentEnv, source, err := internal.ReadCurrentEnvForConfig(cfg)
 	if err != nil {
 		return err
 	}
@@ -30,11 +35,6 @@ func statusEntrypoint(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		cmd.Println("Authenticated:  no — not authenticated")
 		return nil
-	}
-
-	cfg, err := internal.LoadEffectiveConfig()
-	if err != nil {
-		return err
 	}
 
 	accountName := cfg.GetAccountByNumber(*identity.Account)

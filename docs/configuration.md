@@ -54,10 +54,13 @@ When `whoiam exec` or `whoiam validate` resolves which account to check against,
 
 1. `--env <name>` flag (highest priority)
 2. `WHOIAM_EXPECTED_ENV` environment variable
-3. `.whoiam/expected-env` (project-local session file)
-4. `~/.whoiam/expected-env` (global session file)
+3. `AWS_PROFILE` environment variable — if the profile name matches an account in the config
+4. `.whoiam/expected-env` (project-local session file)
+5. `~/.whoiam/expected-env` (global session file)
 
 If none of these are set, the command fails with an error asking you to use `--env` or run `whoiam set`.
+
+`AWS_PROFILE` is only used when its value exactly matches an account name defined in your config. If the profile name has no corresponding account, it is silently ignored and resolution continues to the session files.
 
 ## Environment Variable
 

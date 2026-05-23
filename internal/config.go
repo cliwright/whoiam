@@ -13,6 +13,7 @@ import (
 )
 
 const ExpectedEnvVar = "WHOIAM_EXPECTED_ENV"
+const AwsProfileEnvVar = "AWS_PROFILE"
 
 type ConfigPath struct {
 	Path string
@@ -160,9 +161,27 @@ func ReadCurrentEnv() (string, error) {
 
 // ReadCurrentEnvWithSource is like ReadCurrentEnv but also returns the source:
 // "env" (WHOIAM_EXPECTED_ENV), "local" (.whoiam/expected-env), "global" (~/.whoiam/expected-env), or "" if not set.
+// Does not check AWS_PROFILE; use ReadCurrentEnvForConfig when a config is available.
 func ReadCurrentEnvWithSource() (string, string, error) {
+	return readCurrentEnvWithSource(nil)
+}
+
+// ReadCurrentEnvForConfig resolves the expected environment using the full priority chain,
+// including AWS_PROFILE if the profile name matches an account defined in cfg.
+// Priority: --env flag (caller) > WHOIAM_EXPECTED_ENV > AWS_PROFILE (if matched) > local file > global file.
+func ReadCurrentEnvForConfig(cfg *Config) (string, string, error) {
+	return readCurrentEnvWithSource(cfg)
+}
+
+func readCurrentEnvWithSource(cfg *Config) (string, string, error) {
 	if val := os.Getenv(ExpectedEnvVar); val != "" {
 		return val, "env", nil
+	}
+
+	if cfg != nil {
+		if profile := os.Getenv(AwsProfileEnvVar); profile != "" && cfg.AccountExists(profile) {
+			return profile, "AWS_PROFILE", nil
+		}
 	}
 
 	localDir, err := FindLocalDir()
