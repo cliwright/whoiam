@@ -35,11 +35,14 @@ func rootEntrypoint(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+var version = "dev"
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:          "whoiam",
 	Short:        "Check your current AWS IAM Role",
 	Long:         ``,
+	Version:      version,
 	RunE:         rootEntrypoint,
 	SilenceUsage: true,
 }

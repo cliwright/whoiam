@@ -13,6 +13,8 @@ builds:
       - darwin
     flags:
       - -mod=vendor
+    ldflags:
+      - -X github.com/cliwright/whoiam/cmd.version={{.Version}}
     binary: whoiam
 
 archives:
