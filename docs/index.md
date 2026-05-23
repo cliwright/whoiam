@@ -7,18 +7,53 @@
 You know that sinking feeling. You get dizzy and the walls start closing in on you. Was your session pointed to dev... or prod?
 You know your team shouldn't have local production credentials, but hey... startups. We've all been there.
 
-This has happened to me, and teams I have worked on more times than I care to admit. And that's why I built `whoiam`
-A CLI tool that prevents accidental deployments to the wrong AWS account. Before running a command, it verifies that 
-your current credentials match the account you expect — protecting you from "fat finger" mistakes when working across multiple environments.
+This has happened to me, and teams I have worked on more times than I care to admit. And that's why I built `whoiam`.
+
+---
+
+## How it works
+
+Most tools focus on getting credentials *into* your shell. `whoiam` asks a different question: **are those credentials pointing at the right account?**
+
+Before any command runs, `whoiam` calls `sts:GetCallerIdentity` and compares the result against the account you declared you expected to be on. If they don't match, it exits immediately — before a single byte of infrastructure changes.
+
+It doesn't store credentials, manage profiles, or replace anything you already use. It sits in front of your existing workflow as a single verification step.
+
+---
+
+## Works with whatever you already use
+
+`whoiam` is credential-agnostic. It works with `aws-vault`, AWS SSO, raw `~/.aws/credentials`, instance profiles — anything the AWS SDK can resolve.
+
+**With aws-vault:**
+```sh
+aws-vault exec production -- whoiam exec -- terraform apply
+```
+
+**With AWS SSO / profiles — set `AWS_PROFILE` and whoiam picks it up automatically if the profile name matches an account in your config:**
+```sh
+AWS_PROFILE=production whoiam exec -- terraform apply
+```
+
+**With nothing special — just environment variables or instance credentials:**
+```sh
+whoiam exec --env production -- terraform apply
+```
+
+`aws-vault` ensures you *have* credentials. `whoiam` ensures they're pointing at the *right account*.
+
+---
 
 ## Features
 
-- **Account verification** — assert that current credentials match a named account before running any command
-- **Safe exec** — wrap any command with `whoiam exec` to fail fast if the wrong account is active
-- **Session state** — use `whoiam set` to pin an expected environment for the current project or globally, avoiding repetitive `--env` flags
-- **Config merging** — combine a global account list with per-project overrides; local definitions take precedence
-- **Pre-flight checks** — `whoiam validate` exits non-zero on mismatch, suitable for Taskfiles, CI pipelines, and `mise` hooks
-- **Identity display** — run `whoiam` with no arguments to see your current AWS account and ARN
+- **Fail fast, before anything runs** — exits non-zero immediately on account mismatch, so you never get halfway through a deployment on the wrong environment
+- **Works with any credential source** — aws-vault, SSO, instance profiles, environment variables; if the AWS SDK can see it, whoiam can verify it
+- **AWS_PROFILE support** — if your profile name matches an account in your config, whoiam uses it automatically; no extra flags needed
+- **Pin an expected environment per project** — `whoiam set production` saves your intent so you don't repeat `--env` on every command
+- **Shareable account map** — commit `.whoiam/whoiam.yaml` to your repo so the whole team uses the same account IDs; personal session state stays out of git
+- **CI and Taskfile friendly** — `whoiam validate` exits non-zero on mismatch, making it a drop-in pre-flight check for any pipeline
+
+---
 
 ## Quick Start
 
@@ -37,6 +72,8 @@ whoiam set production
 # 4. Run commands safely — whoiam verifies the account first
 whoiam exec -- terraform apply
 ```
+
+---
 
 ## Documentation
 
