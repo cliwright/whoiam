@@ -42,7 +42,7 @@ Please note that this project is released with a [Contributor Code of Conduct](C
 
 ## Reporting Issues
 
-If you encounter any issues or have any questions, please open an issue on the [GitHub Issues](https://github.com/pytoolbelt/whoiam/issues) page.
+If you encounter any issues or have any questions, please open an issue on the [GitHub Issues](https://github.com/cliwright/whoiam/issues) page.
 
 ## License
 
@@ -50,6 +50,6 @@ By contributing to `whoiam`, you agree that your contributions will be licensed 
 
 ## Contact
 
-If you have any questions or need further assistance, feel free to contact the project maintainer at [jesse@pytoolbelt.com](mailto:jesse@pytoolbelt.com).
+If you have any questions or need further assistance, feel free to contact the project maintainer at [jesse@cliwright.com](mailto:jesse@cliwright.com).
 
 Thank you for your contributions!

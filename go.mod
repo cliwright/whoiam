@@ -1,4 +1,4 @@
-module github.com/pytoolbelt/whoiam
+module github.com/cliwright/whoiam
 
 go 1.23.12
 

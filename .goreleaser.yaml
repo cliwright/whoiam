@@ -37,13 +37,14 @@ changelog:
 
 brews:
   - name: whoiam
-    homepage: https://github.com/pytoolbelt/whoiam
+    homepage: https://github.com/cliwright/whoiam
+    description: "Verify you're on the right AWS account before running any command"
     repository:
-      owner: pytoolbelt
-      name: homebrew-awstools
+      owner: cliwright
+      name: homebrew-cliwright
     commit_author:
       name: Jesse Maitland
-      email: jesse@pytoolbelt.com
+      email: jesse@cliwright.com
 
 checksum:
   name_template: 'checksums.txt'

@@ -1,10 +1,10 @@
 /*
-Copyright © 2024 Jesse Maitland jesse@pytoolbelt.com
+Copyright © 2024 Jesse Maitland jesse@cliwright.com
 */
 package cmd
 
 import (
-	"github.com/pytoolbelt/whoiam/internal"
+	"github.com/cliwright/whoiam/internal"
 	"os"
 
 	"github.com/spf13/cobra"

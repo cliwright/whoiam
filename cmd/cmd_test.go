@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pytoolbelt/whoiam/internal"
+	"github.com/cliwright/whoiam/internal"
 )
 
 // executeCmd runs a cobra command with the given args and returns stdout output and any error.
